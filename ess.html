@@ -60,7 +60,7 @@
   <div class="results" id="results"></div>
 
   <script>
-    // Aktualizacja godziny i dnia tygodnia w Polsce
+    // Funkcja do aktualizacji zegara
     function updateClock() {
       const now = new Date();
       const options = {
@@ -82,6 +82,28 @@
     setInterval(updateClock, 1000);
     updateClock();
 
+    // Funkcja do sprawdzenia czy trzeba zresetować
+    function maybeResetAtFivePM() {
+      const now = new Date();
+      const warsawNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Warsaw" }));
+      const currentDate = warsawNow.toISOString().split("T")[0]; // YYYY-MM-DD
+      const currentHour = warsawNow.getHours();
+
+      const lastResetDate = localStorage.getItem("lastResetDate");
+
+      if (currentHour >= 17 && lastResetDate !== currentDate) {
+        // Resetujemy
+        localStorage.setItem("votes_yes", "0");
+        localStorage.setItem("votes_no", "0");
+        localStorage.setItem("votes_maybe", "0");
+        localStorage.removeItem("lastVoteTime");
+        localStorage.setItem("lastResetDate", currentDate);
+        alert("🌀 Wyniki zostały zresetowane (17:00)!");
+      }
+    }
+
+    maybeResetAtFivePM();
+
     // Głosowanie
     const results = {
       yes: parseInt(localStorage.getItem("votes_yes")) || 0,
@@ -94,7 +116,7 @@
       if (!lastVote) return true;
       const now = new Date().getTime();
       const diff = now - parseInt(lastVote);
-      return diff > 24 * 60 * 60 * 1000; // 24 godziny w ms
+      return diff > 24 * 60 * 60 * 1000; // 24h
     }
 
     function vote(option) {
